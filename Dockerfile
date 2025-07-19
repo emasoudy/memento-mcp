@@ -17,7 +17,7 @@ COPY . .
 RUN npm run build
 
 # Expose port if necessary (optional)
-# EXPOSE 3000
+EXPOSE 3333
 
 # Command to run the MCP server
 CMD ["node", "dist/index.js"]
