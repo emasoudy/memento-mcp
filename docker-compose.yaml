@@ -1,10 +1,25 @@
 services:
+  init-permissions:
+    image: alpine:latest
+    volumes:
+      - ./neo4j-data:/data
+      - ./neo4j-logs:/logs
+      - ./neo4j-import:/import
+    command: |
+      sh -c "
+        mkdir -p /data /logs /import &&
+        chown -R 7474:7474 /data /logs /import &&
+        chmod -R 755 /data /logs /import
+      "
+    user: "0:0"  # Run as root to set permissions
+
   neo4j:
     image: neo4j:2025.03.0-enterprise
     container_name: memento-neo4j
     platform: linux/amd64
-    user: "${UID:-1000}:${GID:-1000}"
-    command: bash -c "mkdir -p /logs && chown neo4j:neo4j /logs && exec /docker-entrypoint.sh neo4j"
+    user: "7474:7474"
+    depends_on:
+      - init-permissions
     environment:
       - NEO4J_AUTH=neo4j/memento_password
       - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
@@ -18,12 +33,13 @@ services:
       - NEO4J_server_memory_pagecache_size=768M
       - NEO4J_server_memory_heap_max__size=1536M
     ports:
-      - "7474:7474"  # HTTP
-      - "7687:7687"  # Bolt
+      - "7474:7474"
+      - "7687:7687"
     volumes:
       - ./neo4j-data:/data
       - ./neo4j-logs:/logs
       - ./neo4j-import:/import
+      
   memento-mcp:
     image: emasoudy/memento-mcp:latest
     container_name: memento-mcp
